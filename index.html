@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Web App</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    </head>
+    <body>
+
+        <div class="container mt-5">
+            <!-- Contenuto della web app verrà inserito qui -->
+
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="selectPalestre" class="form-label">Seleziona palestra:</label>
+                    <select class="form-select" id="selectPalestre"></select>
+                </div>
+                <div class="col-md-4">
+                    <label for="selectInsegnanti" class="form-label">Seleziona insegnante:</label>
+                    <select class="form-select" id="selectInsegnanti" disabled></select>
+                </div>
+                <div class="col-md-4">
+                    <label for="selectDiscipline" class="form-label">Seleziona disciplina:</label>
+                    <select class="form-select" id="selectDiscipline" disabled></select>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <label for="selectData" class="form-label">Seleziona data:</label>
+                    <input type="date" class="form-control" id="selectData" disabled>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary mt-4" id="btnVisualizzaIscritti" disabled>Visualizza Iscritti</button>
+                </div>
+            </div>
+
+            <div id="elencoIscritti" class="mt-4"></div>   
+
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="app.js"></script>
+
+    </body>
+</html>
