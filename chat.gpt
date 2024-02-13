@@ -1,0 +1,16 @@
+query mysql avendo due tabelle. 
+Nella tabella utenti ho 
+id  int(11) AUTO_INCREMENT 
+nome varchar
+disciplina varchar(2)
+palestra varchar(2)
+
+nella tabella lezioni ho
+id  int(11) AUTO_INCREMENT 
+id_utente int(11)
+data (date)
+disciplina varchar(2)
+palestra varchar(2)
+
+voglio estrarre tutti gli utenti che hanno disciplina=j e palestra=lm e che hanno partecipato alla lezione in data="2023/05/20"
+query="SELECT u.* FROM utenti u JOIN lezioni l ON u.id = l.id_utente WHERE l.disciplina = 'j' AND l.palestra = 'lm' AND l.data = '2023-05-20';"

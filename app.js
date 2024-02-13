@@ -1,104 +1,252 @@
 // Codice JavaScript per la gestione delle interazioni della web app
 // Sarà popolato man mano che implementiamo le varie funzionalità
 
-$(document).ready(function() {
-    // Popola la lista delle palestre al caricamento della pagina
-    $.ajax({
-        url: "api.php",
-        method: "GET",
-        data: { action: "getPalestre" },
-        success: function(data) {
-            var selectPalestre = $("#selectPalestre");
-            selectPalestre.empty();
-            selectPalestre.append("<option value='' disabled selected>Seleziona palestra</option>");
 
-            $.each(data, function(index, palestra) {
-                selectPalestre.append("<option value='" + palestra.id_palestra + "'>" + palestra.nome + "</option>");
-            });
+var nomeInsegnante, idInsegnante, nomePalestra, nomeSport,idEvento=0;
+var idPalestra = {};
+var idSport = {};
+var elencoEvento = [];
+var timeoutId=null; //genero la variabile nulla da utilizzare per il salvataggio degli array con timeout
+
+// insegnanti: {'1': 'Riccardo Guidolin', '2': 'Marco Casalegno', '3': 'Paride Cartabia', '4':''},
+// palestre: {'ub': 'Uboldo', 'vg': 'Villaguardia', 'lm': 'Lomazzo'},
+// sport: {'jk': 'Jeet Kune Do', 'km': 'Krav Maga', 'ae': 'Kali Filippino', 'bf':'Panantukan'},
+// relazione: [
+//     {id: '1', palestra: {'vg': ['k', 'f'], }},
+//     {id: '2', palestra: {'vg': ['j'], 'lm': ['j'], }},
+//     {id: '3', palestra: {'ub': ['j'], }},
+// ]
+
+
+
+
+//Il cookie “insegnante” non presenta un valore valido per l’attributo “SameSite”. Presto i cookie senza l’attributo “SameSite” o con un valore non valido verranno gestiti come “Lax”. Questo significa che il cookie non verrà più inviato in contesti di terze parti. Se l’applicazione dipende dalla disponibilità di questo cookie in questo tipo di contesto, aggiungere l’attributo “SameSite=None“. Per ulteriori informazioni sull’attributo “SameSite”, consultare https://developer.mozilla.org/docs/Web/HTTP/Headers/Set-Cookie/SameSite app.js:86:47
+
+
+
+
+//come prima cosa inserisco la data di oggi
+let dataSelezionata = getDate();
+$('#dataGiorno').val(dataSelezionata);//la data del blocco info
+$('#dataPresenze').val(dataSelezionata); // la data del blocco presenze
+
+$('#dataPresenze').on('change', function () {
+    dataSelezionata = $('#dataGiorno').val();
+
+});
+
+/**
+ * ------------------------------------------
+ * Funzioni di lettura del cookie relativo alla ultima tab utilizzata
+ * ------------------------------------------
+ */
+$(document).ready(function () {
+    tabAperta = (getCookie('theTab')) ? getCookie('theTab') : 'Info';
+    //    console.log("Cookie Tab: " + tabAperta);
+    $(`#myTab a[href="#${tabAperta}"]`).tab('show');
+});
+
+
+/**
+ * ------------------------------------------
+ * Funzioni da attivare quando clicco su info
+ * ------------------------------------------
+ */
+
+$(document).ready(function () {
+    $('#myTab a[href="#Info"]').on('click', function () {
+        //        console.log('Passo a Info');
+        document.cookie = "theTab=Info"; 
+        $('#Sport,#elencoAllievi').empty();
+    });
+    //controllo il cookie e l'insegnante
+    idInsegnante = (getCookie('insegnante')) ? getCookie('insegnante') : '1';
+
+
+
+    $('#dataGiorno').on('change', function () {
+        dataSelezionata = $('#dataGiorno').val();
+        clearInput();
+        selectPalestra(idInsegnante);
+        
+    });
+
+
+
+
+    //popolo subito le palestre in base all'utente default
+    selectPalestra(idInsegnante);
+    //    //se ho gia selezionato l'insegnante lo mostro
+    //    if (nomeInsegnante != "") {
+    //        $("#carouselInstructor img[alt='" + nomeInsegnante + "']").parent().addClass('active');
+    //        $("#selectPalestre").prop("disabled", false);
+    //    } else {
+    //        $("#carouselInstructor").find('img:first').parent().addClass('active');
+    //    }
+    //se invece seleziono un diverso insegnante lo salvo nel cookie
+    $('#carouselInstructor').on('slid.bs.carousel', function () {
+        idInsegnante = $(this).find('.active').children().data('id');
+        nomeInsegnante = $(this).find('.active').children().attr('alt');
+        clearInput();
+        if (idInsegnante != "0") {
+            document.cookie = "insegnante=" + idInsegnante;
+            selectPalestra(idInsegnante);
+            
+        } else {
+            //sono all'interno di un evento!
+            idEvento = $(this).find('.active').children().data('evento');
+            console.log(`registro l'evento: `+idEvento);
+            listAllUsers(idEvento);
+        }
+    });
+    /**
+     * applico la scelta della palestra
+     * ho gia aquisito il nome dell'insegnante
+     */
+    $('#Info').on('click', '#Palestre input', function (e) {
+        let idx = $(this).val();
+        if ($(this).is(':checked')) {
+            idPalestra[$(this).val()] = $(this).next('label').text();
+        } else {
+            delete idPalestra[$(this).val()];
+        }
+        if (Object.keys(idSport).length !== 0 && Object.keys(idPalestra).length !== 0) {
+            // if(typeof idSport !== "undefined"){
+            var params = {};
+
+            params['evn'] = idEvento;
+            params['pal'] = idPalestra;
+            params['ins'] = idInsegnante;
+            params['tim'] = dataSelezionata;
+            params['spo'] = idSport;
+            getListAllievi(params);
+//            console.log('getListAllievi - From Palestra');
+//            console.log(params);
+        }
+    });
+    //imposto il controllo sul select dello sport.
+    $('#Info').on('click', '#Sport input', function () {
+        if ($(this).is(':checked')) {
+            idSport[$(this).val()] = $(this).next('label').text();
+        } else {
+            delete idSport[$(this).val()];
+        }
+        if (Object.keys(idPalestra).length !== 0 && Object.keys(idSport).length !== 0) {
+            var params = {};
+            params['pal'] = idPalestra;
+            params['ins'] = idInsegnante;
+            params['tim'] = dataSelezionata;
+            params['spo'] = idSport;
+            params['evn'] = idEvento;
+            getListAllievi(params);
+            
+//            console.log('getListAllievi - From Sport');
+//            console.log(params);
         }
     });
 
-    // Gestisci il cambiamento nella selezione della palestra
-    $("#selectPalestre").change(function() {
-        var idPalestra = $(this).val();
+    count = 0;
+    
+    /**
+     * attivo il controllo sugli utenti
+     * Quando clicco sull'utente e sono in un evento deve salvare in altro modo
+     */
+    $('body').on('click', '#elencoAllievi input', function () {
+        var params = {};
+        params['pal'] = idPalestra;
+        params['ins'] = idInsegnante;
+        params['tim'] = dataSelezionata;
+        params['spo'] = idSport;
+        params['id'] = $(this).val();
+        params['evn'] = idEvento;
 
-        // Popola la lista degli insegnanti in base alla palestra selezionata
-        $.ajax({
-            url: "api.php",
-            method: "GET",
-            data: { action: "getInsegnanti", idPalestra: idPalestra },
-            success: function(data) {
-                var selectInsegnanti = $("#selectInsegnanti");
-                selectInsegnanti.empty();
-                selectInsegnanti.append("<option value='' disabled selected>Seleziona insegnante</option>");
+        if (this.checked) {
+            saveListAllievi($(this), params);
+            count++;
+        } else {
+//            console.log(params);
+            removeListAllievi($(this), params);
+            count--;
+        }
+        $('#tabPresTotP').html(count);
+    });
 
-                $.each(data, function(index, insegnante) {
-                    selectInsegnanti.append("<option value='" + insegnante.id_insegnante + "'>" + insegnante.nome + "</option>");
-                });
-
-                // Abilita la selezione degli insegnanti
-                selectInsegnanti.prop("disabled", false);
+    $('body').on('keyup', '#filtraAllievi', function () {
+        tx = $(this).val();
+        TX = tx.toUpperCase();
+        $("#elencoAllievi label").each(function (index) {
+            nm = $(this).text();
+            if (nm.toUpperCase().indexOf(TX) > -1) {
+                $(this).next().removeClass('d-none');
+                $(this).removeClass('d-none');
+            } else {
+                $(this).addClass('d-none');
+                $(this).next().addClass('d-none');
             }
+
         });
     });
 
-    // Gestisci il cambiamento nella selezione degli insegnanti
-    $("#selectInsegnanti").change(function() {
-        var idInsegnante = $(this).val();
 
-        // Popola la lista delle discipline in base all'insegnante selezionato
-        $.ajax({
-            url: "api.php",
-            method: "GET",
-            data: { action: "getDiscipline", idInsegnante: idInsegnante },
-            success: function(data) {
-                var selectDiscipline = $("#selectDiscipline");
-                selectDiscipline.empty();
-                selectDiscipline.append("<option value='' disabled selected>Seleziona disciplina</option>");
 
-                $.each(data, function(index, disciplina) {
-                    selectDiscipline.append("<option value='" + disciplina.id_disciplina + "'>" + disciplina.nome + "</option>");
-                });
+});
 
-                // Abilita la selezione delle discipline
-                selectDiscipline.prop("disabled", false);
-            }
-        });
+
+
+/**
+ * ------------------------------------------
+ * Funzioni da attivare quando clicco su Registro
+ * ------------------------------------------
+ */
+
+$(document).ready(function () {
+    //    mostroPalestreSport()
+    $('#myTab a[href="#Registro"]').on('click', function () {
+        console.log('Passo a Registro');
+        //        document.cookie = "theTab=Registro";
+        //        $('#lePalestre,#gliSport').empty();
+        //        mostroPalestreSport();
     });
+    ////    --- Attivo la lettura del form quando clicco su Submit
+    //    $('#formInsert').on("submit", function (event) {
+    //        event.preventDefault();
+    //        var data = $('#formInsert').serializeArray();
+    //        let formData={};
+    //        $.each($('#formInsert').serializeArray(), function (index, fieldData) {
+    //            if (fieldData.name.endsWith('[]')) {
+    //                let name = fieldData.name.substring(0, fieldData.name.length - 2);
+    //                if (!(name in formData)) {
+    //                    formData[name] = [];
+    //                }
+    //                formData[name].push(fieldData.value);
+    //            } else {
+    //                formData[fieldData.name] = fieldData.value;
+    //            }
+    //        });
+    //        insertUtente(formData);
+    //    });
+});// document-ready
 
-    // Gestisci il cambiamento nella selezione della disciplina
-    $("#selectDiscipline").change(function() {
-        // Abilita la selezione della data
-        $("#selectData").prop("disabled", false);
+
+/**
+ * ------------------------------------------
+ * Funzioni da attivare quando clicco su Presenze
+ * ------------------------------------------
+ */
+$(document).ready(function () {
+    //    console.log('Array Dati utente');
+    //    console.log(datiUtente);
+    $('#myTab a[href="#Presenze"]').on('click', function () {
+        var params = {};
+        document.cookie = "theTab=Presenze";
+        var date = new Date(dataSelezionata);
+        let month = ("0" + (date.getMonth() + 1)).slice(-2);
+        console.log(month); // (January gives 0)
+        params['mon'] = month;
+        getListPresenze(params);
     });
-
-    // Gestisci il click sul pulsante "Visualizza Iscritti"
-    $("#btnVisualizzaIscritti").click(function() {
-        var idInsegnante = $("#selectInsegnanti").val();
-        var dataSvolgimento = $("#selectData").val();
-
-        // Ottieni e visualizza l'elenco degli iscritti per l'insegnante e la data selezionati
-        $.ajax({
-            url: "api.php",
-            method: "GET",
-            data: { action: "getIscritti", idInsegnante: idInsegnante, dataSvolgimento: dataSvolgimento },
-            success: function(data) {
-                var elencoIscritti = $("#elencoIscritti");
-                elencoIscritti.empty();
-
-                if (data.length > 0) {
-                    elencoIscritti.append("<h4>Elenco Iscritti:</h4>");
-                    elencoIscritti.append("<ul>");
-
-                    $.each(data, function(index, iscritto) {
-                        elencoIscritti.append("<li>" + iscritto.nome + " - Presente: " + (iscritto.presente ? "Sì" : "No") + "</li>");
-                    });
-
-                    elencoIscritti.append("</ul>");
-                } else {
-                    elencoIscritti.append("<p>Nessun iscritto trovato per l'insegnante e la data selezionati.</p>");
-                }
-            }
-        });
-    });
+    //se cambio la data presenze devo rigenerare l'elenco in base al mese
+    //    $('#dataPresenze').on('blur', function () {
+    //        console.log('cambio la data:' + $(this).val());
+    //    });
 });
