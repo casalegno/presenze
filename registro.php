@@ -2,14 +2,7 @@
 //recupero il mese e l'anno attuali
 $mese = date('m');
 $anno = date('Y');
-$allieviJson = printAllievi(true);
-echo "<script> var elencoAllievi={$allieviJson};"
-  . "</script>";
-$allieviArray = json_decode($allieviJson, true);
-$optAllievi = "<option></option>";
-foreach ($allieviArray as $key => $allievo) {
-  $optAllievi .= "<option value='{$key}'>{$allievo['nome']}</option>";
-}
+
 
 ?>
 <p>Visualizzo l'elenco di tutte le lezioni fatte nel mese</p>

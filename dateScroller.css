@@ -1,0 +1,20 @@
+.date-scroll{
+	position:relative;
+	padding:10px;
+	font-size:1.5rem;
+	text-align:center;
+	width:100%;
+	.input{
+		display: none;
+	}
+	/* &::before,&::after{
+		font-size: 0.5rem;
+		display: block;
+	}
+	&::before{
+		content:"▲";	
+	}
+	&::after{
+		content:"▼";
+	} */
+}

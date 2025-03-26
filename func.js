@@ -247,10 +247,11 @@ async function insertUtente(p) {
  * @param {*} p 
  */
 async function getListPresenze() {
+    ID('allievoPresenze').classList.add('d-none');
+    ID('tablePresenze').classList.remove('d-none');
     var params = {};
     //se tolgo il commento memorizzo il tab selezionato
     //document.cookie = "theTab=Presenze";
-    console.log('Passo a Presenze');
     var date = new Date(dataSelezionata);
     params['mon'] = ("0" + (date.getMonth() + 1)).slice(-2);  // (January gives 0)
     params['yea'] = date.getFullYear();
@@ -305,34 +306,43 @@ function clearInput() {
  */
 function updDate(event) {
     theDate = new Date(dataSelezionata);
-    if (event.target.name == 'mesePresenze')
-        dataSelezionata = `${theDate.getFullYear()}-${event.target.value}-01`;
-    if (event.target.name == 'annoPresenze')
-        dataSelezionata = `${event.target.value}-${theDate.getMonth()}-01`;
+    if (event.target.name == 'mesePresenze'){
+        theDate.setMonth(parseInt(event.target.value)-1);
+        dataSelezionata = `${theDate.getFullYear()}-${theDate.getMonth()}-01`;
+        dataSelezionata = theDate;
+    }
+    if (event.target.name == 'annoPresenze'){
+        theDate.setFullYear(event.target.value);
+        dataSelezionata = theDate;
+    }
+        
     if (event.target.type == 'date')
         dataSelezionata = event.target.value;
 }
 
 
-async function getInfoAllievo() {
+async function getAllievoPresenze() {
+    ID('tablePresenze').classList.add('d-none');
     let params = {};
-    let nome = document.getElementById('nomeRegistro');
-    let anno = document.getElementById('annoRegistro');
-    params.id = nome.value;
-    params.anno = anno.value;
+    params.id = ID('nomePresenze').value;
+    if(params.id == ''){
+        return getListPresenze();
+    }
+    params.anno = ID('annoPresenze').value;
+    params.mese = ID('mesePresenze').value;
     data = await doajax('allievo', params);
-    document.getElementById('infoRegistro').classList.remove('d-none');
+    ID('allievoPresenze').classList.remove('d-none');
     console.log(data);
     //recupero le informazioni
-    let lista = document.getElementById('listaPresenzeCard');
-    let totali = document.getElementById('totaliPresenzeCard');
+    let lista = ID('listaPresenzeCard');
+    let totali = ID('totaliPresenzeCard');
     // lo svuoto
     lista.innerHTML = "";
     if (data.presenze)
         data.presenze.forEach((pre) => {
             let date = new Date(pre.ladata);
             let p = document.createElement('p');
-            p.innerText = `${daysWeek[date.getDay()]} ${date.getDate()}/${months[date.getMonth()]} --- ${elencoPalestre[pre.palestra]} || ${elencoSport[pre.disciplina]}`;
+            p.innerHTML = `${daysWeek[date.getDay()]} ${date.getDate()}/${months[date.getMonth()]} <br /> ${elencoPalestre[pre.palestra]} || ${elencoSport[pre.disciplina]}`;
             lista.appendChild(p);
         });
     if (data.lezioni) {

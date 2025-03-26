@@ -2,13 +2,19 @@
 // Sarà popolato man mano che implementiamo le varie funzionalità
 
 
-var nomeInsegnante, idInsegnante, nomePalestra, nomeSport,idEvento=0;
+var nomeInsegnante, idInsegnante, nomePalestra, nomeSport, idEvento = 0;
 var idPalestra = {};
 var idSport = {};
 var elencoEvento = [];
-var timeoutId=null; //genero la variabile nulla da utilizzare per il salvataggio degli array con timeout
-var dataGiorno = document.getElementById('dataGiorno');
-var dataPresenze = document.getElementById('dataPresenze');
+var timeoutId = null; //genero la variabile nulla da utilizzare per il salvataggio degli array con timeout
+//una simulazione di jquery ma con vanilla
+// const $ = (el) => document.querySelector(el);
+// const $$ = (el) => document.querySelectorAll(el);
+const ID = (el) => document.getElementById(el);
+
+
+var dataGiorno = ID('dataGiorno');
+var dataPresenze = ID('dataPresenze');
 
 // insegnanti: {'1': 'Riccardo Guidolin', '2': 'Marco Casalegno', '3': 'Paride Cartabia', '4':''},
 // palestre: {'ub': 'Uboldo', 'vg': 'Villaguardia', 'lm': 'Lomazzo'},
@@ -30,18 +36,27 @@ var dataPresenze = document.getElementById('dataPresenze');
 //come prima cosa inserisco la data di oggi
 let dataSelezionata = getDate();
 dataGiorno.value = dataSelezionata;//la data del blocco info
-dataPresenze.value = dataSelezionata;// la data del blocco presenze
 
-/**
- * ------------------------------------------
- * Funzioni di lettura del cookie relativo alla ultima tab utilizzata
- * ------------------------------------------
- */
-$(document).ready(function () {
-    tabAperta = (getCookie('theTab')) ? getCookie('theTab') : 'Info';
-    //    console.log("Cookie Tab: " + tabAperta);
-    $(`#myTab a[href="#${tabAperta}"]`).tab('show');
+
+//attivo il dataScroll per gli elementi mese ed anno
+ID('mesePresenze').dateScroller({
+    label:[
+		'','Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+		'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+	]
 });
+ID('annoPresenze').dateScroller();
+
+    /**
+     * ------------------------------------------
+     * Funzioni di lettura del cookie relativo alla ultima tab utilizzata
+     * ------------------------------------------
+     */
+    $(document).ready(function () {
+        tabAperta = (getCookie('theTab')) ? getCookie('theTab') : 'Info';
+        //    console.log("Cookie Tab: " + tabAperta);
+        $(`#myTab a[href="#${tabAperta}"]`).tab('show');
+    });
 
 
 /**
@@ -53,7 +68,7 @@ $(document).ready(function () {
 $(document).ready(function () {
     $('#myTab a[href="#Info"]').on('click', function () {
         //        console.log('Passo a Info');
-        document.cookie = "theTab=Info"; 
+        document.cookie = "theTab=Info";
         $('#elencoAllievi').empty();
     });
     //controllo il cookie e l'insegnante
@@ -62,7 +77,7 @@ $(document).ready(function () {
     $('#dataGiorno').on('change', function () {
         dataSelezionata = $('#dataGiorno').val();
         clearInput();
-        selectPalestra(idInsegnante);     
+        selectPalestra(idInsegnante);
     });
     //popolo subito le palestre in base all'utente default
     selectPalestra(idInsegnante);
@@ -81,11 +96,11 @@ $(document).ready(function () {
         if (idInsegnante != "0") {
             document.cookie = "insegnante=" + idInsegnante;
             selectPalestra(idInsegnante);
-            
+
         } else {
             //sono all'interno di un evento!
             idEvento = $(this).find('.active').children().data('evento');
-            console.log(`registro l'evento: `+idEvento);
+            console.log(`registro l'evento: ` + idEvento);
             listAllUsers(idEvento);
         }
     });
@@ -110,8 +125,8 @@ $(document).ready(function () {
             params['tim'] = dataSelezionata;
             params['spo'] = idSport;
             getListAllievi(params);
-//            console.log('getListAllievi - From Palestra');
-//            console.log(params);
+            //            console.log('getListAllievi - From Palestra');
+            //            console.log(params);
         }
     });
     //imposto il controllo sul select dello sport.
@@ -129,14 +144,14 @@ $(document).ready(function () {
             params['spo'] = idSport;
             params['evn'] = idEvento;
             getListAllievi(params);
-            
-//            console.log('getListAllievi - From Sport');
-//            console.log(params);
+
+            //            console.log('getListAllievi - From Sport');
+            //            console.log(params);
         }
     });
 
     count = 0;
-    
+
     /**
      * attivo il controllo sugli utenti
      * Quando clicco sull'utente e sono in un evento deve salvare in altro modo
@@ -154,7 +169,7 @@ $(document).ready(function () {
             saveListAllievi($(this), params);
             count++;
         } else {
-//            console.log(params);
+            //            console.log(params);
             removeListAllievi($(this), params);
             count--;
         }
@@ -227,24 +242,24 @@ $(document).ready(function () {
 $(document).ready(function () {
     //lla pressione del tasto presenze
     document.querySelector('#myTab a[href="#Presenze"]').addEventListener('click', getListPresenze);
-    
-    //se cambio la data presenze devo rigenerare l'elenco in base al mese
-    document.getElementById('dataPresenze').addEventListener('change', (event)=>{   
-        updDate(event);
-        getListPresenze();
-    });
 
-    document.getElementById('mesePresenze').addEventListener('change', (event)=>{
-        let io=event.target;
-        let val=io.value;
+    //se cambio la data presenze devo rigenerare l'elenco in base al mese
+    // document.getElementById('dataPresenze').addEventListener('change', (event) => {
+    //     updDate(event);
+    //     getListPresenze();
+    // });
+
+    document.getElementById('mesePresenze').addEventListener('blur', (event) => {
+        let io = event.target;
+        let val = io.value;
         // io.nextElementSibling.innerText=`0${val}`;
         updDate(event);
         getListPresenze();
     });
-    document.getElementById('annoPresenze').addEventListener('change', (event)=>{
+    document.getElementById('annoPresenze').addEventListener('blur', (event) => {
         debugger
-        let io=event.target;
-        let val=io.value;
+        let io = event.target;
+        let val = io.value;
         // io.nextElementSibling.innerText=val;
         updDate(event);
         getListPresenze();

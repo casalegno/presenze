@@ -106,7 +106,7 @@ if ($search_method == "GET" && isset($action)) {
             echo json_encode($json);
             break;
         case "allievo":
-            infoAllievo();
+            getAllievoPresenze();
             break;
         case 'all':
             printAllievi();
@@ -240,10 +240,12 @@ function printAllievi(bool $ret = false) {
  * @author Casalegno Marco <casalegno.marco@sigesgroup.it> 
  * @return string
  */
-function infoAllievo() {
+function getAllievoPresenze() {
     global $wpdb, $opts;
     if (!isset($opts['id'])) die(json_encode(['msg' => 'nessun allievo selezionato']));
-    $sql_allievo = "SELECT * FROM webapp_lezioni WHERE id_utente='{$opts['id']}' AND YEAR(ladata) = '{$opts['anno']}'";
+    $sql_allievo = "SELECT * FROM webapp_lezioni WHERE id_utente='{$opts['id']}' AND YEAR(ladata) = '{$opts['anno']}' AND MONTH(ladata) = '{$opts['mese']}'";
+    //al momento estraggo solo il mese, poi estrarro tutto l'anno e filtro per il mese
+    //$sql_allievo = "SELECT * FROM webapp_lezioni WHERE id_utente='{$opts['id']}' AND YEAR(ladata) = '{$opts['anno']}' ;
     $result = $wpdb->get_results($sql_allievo, ARRAY_A);
     //setto le presenze cosi come vengono restituiti i dati
     $json['presenze']=$result;
