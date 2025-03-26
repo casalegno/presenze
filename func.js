@@ -249,6 +249,9 @@ async function insertUtente(p) {
 async function getListPresenze() {
     ID('allievoPresenze').classList.add('d-none');
     ID('tablePresenze').classList.remove('d-none');
+    if(ID('nomePresenze').value!=""){
+        getAllievoPresenze();
+    };
     var params = {};
     //se tolgo il commento memorizzo il tab selezionato
     //document.cookie = "theTab=Presenze";
@@ -338,6 +341,7 @@ async function getAllievoPresenze() {
     let totali = ID('totaliPresenzeCard');
     // lo svuoto
     lista.innerHTML = "";
+    totali.innerHTML = "";
     if (data.presenze)
         data.presenze.forEach((pre) => {
             let date = new Date(pre.ladata);

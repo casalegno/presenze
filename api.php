@@ -243,7 +243,7 @@ function printAllievi(bool $ret = false) {
 function getAllievoPresenze() {
     global $wpdb, $opts;
     if (!isset($opts['id'])) die(json_encode(['msg' => 'nessun allievo selezionato']));
-    $sql_allievo = "SELECT * FROM webapp_lezioni WHERE id_utente='{$opts['id']}' AND YEAR(ladata) = '{$opts['anno']}' AND MONTH(ladata) = '{$opts['mese']}'";
+    $sql_allievo = "SELECT * FROM webapp_lezioni WHERE id_utente='{$opts['id']}' AND YEAR(ladata) = '{$opts['anno']}' AND MONTH(ladata) = '{$opts['mese']}' ORDER By ladata";
     //al momento estraggo solo il mese, poi estrarro tutto l'anno e filtro per il mese
     //$sql_allievo = "SELECT * FROM webapp_lezioni WHERE id_utente='{$opts['id']}' AND YEAR(ladata) = '{$opts['anno']}' ;
     $result = $wpdb->get_results($sql_allievo, ARRAY_A);
