@@ -10,7 +10,8 @@ $_SESSION["loggedIn"] = true;
 
 // Verifica se l'utente è autenticato in WordPress
 if (!is_user_logged_in()) {    
-    header('Location:https://realkombatsystem.it/wp-login.php?redirect_to=presenze');
+    // header('Location:https://realkombatsystem.it/wp-login.php?redirect_to=presenze');
+    header('Location:http://realkombatsystem.lh/wp-login.php?redirect_to=presenze');
 }
 if( !current_user_can('editor') && !current_user_can('administrator')){
     //header('Location:https://realkombatsystem.it/');

@@ -7,6 +7,8 @@ var idPalestra = {};
 var idSport = {};
 var elencoEvento = [];
 var timeoutId=null; //genero la variabile nulla da utilizzare per il salvataggio degli array con timeout
+var dataGiorno = document.getElementById('dataGiorno');
+var dataPresenze = document.getElementById('dataPresenze');
 
 // insegnanti: {'1': 'Riccardo Guidolin', '2': 'Marco Casalegno', '3': 'Paride Cartabia', '4':''},
 // palestre: {'ub': 'Uboldo', 'vg': 'Villaguardia', 'lm': 'Lomazzo'},
@@ -27,13 +29,8 @@ var timeoutId=null; //genero la variabile nulla da utilizzare per il salvataggio
 
 //come prima cosa inserisco la data di oggi
 let dataSelezionata = getDate();
-$('#dataGiorno').val(dataSelezionata);//la data del blocco info
-$('#dataPresenze').val(dataSelezionata); // la data del blocco presenze
-
-$('#dataPresenze').on('change', function () {
-    dataSelezionata = $('#dataGiorno').val();
-
-});
+dataGiorno.value = dataSelezionata;//la data del blocco info
+dataPresenze.value = dataSelezionata;// la data del blocco presenze
 
 /**
  * ------------------------------------------
@@ -57,23 +54,16 @@ $(document).ready(function () {
     $('#myTab a[href="#Info"]').on('click', function () {
         //        console.log('Passo a Info');
         document.cookie = "theTab=Info"; 
-        $('#Sport,#elencoAllievi').empty();
+        $('#elencoAllievi').empty();
     });
     //controllo il cookie e l'insegnante
     idInsegnante = (getCookie('insegnante')) ? getCookie('insegnante') : '1';
 
-
-
     $('#dataGiorno').on('change', function () {
         dataSelezionata = $('#dataGiorno').val();
         clearInput();
-        selectPalestra(idInsegnante);
-        
+        selectPalestra(idInsegnante);     
     });
-
-
-
-
     //popolo subito le palestre in base all'utente default
     selectPalestra(idInsegnante);
     //    //se ho gia selezionato l'insegnante lo mostro
@@ -203,6 +193,7 @@ $(document).ready(function () {
     //    mostroPalestreSport()
     $('#myTab a[href="#Registro"]').on('click', function () {
         console.log('Passo a Registro');
+        //se tolgo il commento memorizzo il tab selezionato
         //        document.cookie = "theTab=Registro";
         //        $('#lePalestre,#gliSport').empty();
         //        mostroPalestreSport();
@@ -234,19 +225,30 @@ $(document).ready(function () {
  * ------------------------------------------
  */
 $(document).ready(function () {
-    //    console.log('Array Dati utente');
-    //    console.log(datiUtente);
-    $('#myTab a[href="#Presenze"]').on('click', function () {
-        var params = {};
-        document.cookie = "theTab=Presenze";
-        var date = new Date(dataSelezionata);
-        let month = ("0" + (date.getMonth() + 1)).slice(-2);
-        console.log(month); // (January gives 0)
-        params['mon'] = month;
-        getListPresenze(params);
-    });
+    //lla pressione del tasto presenze
+    document.querySelector('#myTab a[href="#Presenze"]').addEventListener('click', getListPresenze);
+    
     //se cambio la data presenze devo rigenerare l'elenco in base al mese
-    //    $('#dataPresenze').on('blur', function () {
-    //        console.log('cambio la data:' + $(this).val());
-    //    });
+    document.getElementById('dataPresenze').addEventListener('change', (event)=>{   
+        updDate(event);
+        getListPresenze();
+    });
+
+    document.getElementById('mesePresenze').addEventListener('change', (event)=>{
+        let io=event.target;
+        let val=io.value;
+        // io.nextElementSibling.innerText=`0${val}`;
+        updDate(event);
+        getListPresenze();
+    });
+    document.getElementById('annoPresenze').addEventListener('change', (event)=>{
+        debugger
+        let io=event.target;
+        let val=io.value;
+        // io.nextElementSibling.innerText=val;
+        updDate(event);
+        getListPresenze();
+    });
+
+
 });

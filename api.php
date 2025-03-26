@@ -46,7 +46,7 @@ if ($search_method == "GET" && isset($action)) {
             }
             $sql_presenti = "SELECT id_utente FROM webapp_lezioni WHERE ladata='{$opts['tim']}' AND ({$p_sport}) AND ({$p_pal}) AND istruttore='{$opts['ins']}'";
             $ipresenti = $wpdb->get_results($sql_presenti, ARRAY_A);
-//            $json['sql_presenti']=$sql_presenti;
+            //            $json['sql_presenti']=$sql_presenti;
             foreach ($ipresenti as $p) {
                 $json['presenze'][] = $p['id_utente'];
             }
@@ -58,25 +58,28 @@ if ($search_method == "GET" && isset($action)) {
             $sql_salva = "INSERT INTO webapp_lezioni (id_utente,disciplina,palestra,istruttore,ladata) VALUES ('{$opts['id']}', '{$sport}', '{$palestra}', '{$opts['ins']}','{$opts['tim']}' );";
             $result = $wpdb->query($sql_salva);
             $json = array('msg' => 'salvato');
-//            $json['sql']=$sql_salva;
+            //            $json['sql']=$sql_salva;
             echo json_encode($json);
             break;
         case "rimuovi":
-//            $sport=reset($opts['spo']); //restituisce il primo valore
+            //            $sport=reset($opts['spo']); //restituisce il primo valore
             $sport = array_key_first($opts['spo']); //restituisce la prima chiave
             $palestra = array_key_first($opts['pal']);
             $sql_rimuovi = "DELETE FROM webapp_lezioni WHERE id_utente='{$opts['id']}' AND ladata='{$opts['tim']}' AND palestra='{$palestra}' AND disciplina='{$sport}'";
             $result = $wpdb->query($sql_rimuovi);
             $json = array('msg' => 'rimosso');
-//            $json['sql'] = $sql_rimuovi;
+            //            $json['sql'] = $sql_rimuovi;
             echo json_encode($json);
             break;
         case "mese":
-            $sql_mese = "";
-            $result = $conn->query($sql_mese);
-            if ($result->num_rows > 0) {
-                
+            $sql_mese = "SELECT ladata, palestra, disciplina, COUNT(DISTINCT id_utente) AS numero_presenti FROM webapp_lezioni WHERE YEAR(ladata) = '{$opts['yea']}' AND MONTH(ladata) = '{$opts['mon']}' GROUP BY ladata,palestra,disciplina ORDER BY ladata,palestra,disciplina";
+            $result = $wpdb->get_results($sql_mese, ARRAY_A);
+            if (count($result) > 0) {
+                $json['presenze'] = $result;
+            } else {
+                $json['msg'] = 'nessun risultato';
             }
+            echo json_encode($json);
             break;
         //
         case "inserisci":
@@ -97,10 +100,13 @@ if ($search_method == "GET" && isset($action)) {
             //     echo json_encode($json);
             //    }
             //$result = $conn->query($sql_mese);
-//            if ($result->num_rows > 0) {
-//
-//            }
+            //            if ($result->num_rows > 0) {
+            //
+            //            }
             echo json_encode($json);
+            break;
+        case "allievo":
+            infoAllievo();
             break;
         case 'all':
             printAllievi();
@@ -150,7 +156,7 @@ function printIstruttori() {
  */
 function printEventi() {
     global $wpdb;
-   
+
     $today = getdate();
     $args = array(
         'category_name' => 'seminari', // Sostituisci con il nome della tua categoria
@@ -161,20 +167,20 @@ function printEventi() {
             ),
         ),
         'post_status' => 'private',
-//        'date_query' => array(
-//            array(
-//                'year' => $today['year'], // Sostituisci con l'anno desiderato
-//                'month' => $today['mon'], // Sostituisci con il mese desiderato
-//                'day' => $today['mday'], // Sostituisci con il giorno desiderato
-//            ),
-//        ),
+        //        'date_query' => array(
+        //            array(
+        //                'year' => $today['year'], // Sostituisci con l'anno desiderato
+        //                'month' => $today['mon'], // Sostituisci con il mese desiderato
+        //                'day' => $today['mday'], // Sostituisci con il giorno desiderato
+        //            ),
+        //        ),
     );
     $posts_with_featured_image = get_posts($args);
     foreach ($posts_with_featured_image as $post) {
         $post_id = $post->ID;
         $post_title = get_the_title($post_id);
         $post_image = get_the_post_thumbnail_url($post_id);
-//        $post_date = get_the_date('Y-m-d', $post_id);
+        //        $post_date = get_the_date('Y-m-d', $post_id);
         echo "<div id='evn{$post_id}' class='carousel-item evento'><img src='{$post_image}' class='img-fluid img-thumbnail' alt='{$post_title}' data-id='0' data-evento='{$post_id}' data-palestre='lc' data-corsi='km,jk,pt,ae'></div>";
     }
 }
@@ -193,27 +199,59 @@ function prepareJs() {
     $objE = maybe_unserialize($rks_E[0]['post_content']);
     $jsonE = json_encode($objE['choices']);
     echo "<script> var elencoPalestre={$jsonP};"
-    . "var elencoSport={$jsonE}"
-    . "</script>";
+        . "var elencoSport={$jsonE}"
+        . "</script>";
 }
 
-function printAllievi() {
-    global $wpdb,$opts;
+/**
+ * Funzione che stampa l'elenco di tutti gli allievi
+ *
+ * @param boolean $json indica se ritoranre un json o stampare direttamente
+ * @author Casalegno Marco <casalegno.marco@sigesgroup.it> 
+ * @return string
+ */
+function printAllievi(bool $ret = false) {
+    global $wpdb, $opts;
     $sql_id_allievi = "SELECT user_id FROM wp_usermeta WHERE  meta_key = 'rks_ruolo' AND meta_value='0'";
     $listaAllievi = $wpdb->get_results($sql_id_allievi, ARRAY_A);
     foreach ($listaAllievi as $a) {
         $nome = get_user_meta($a['user_id'], 'first_name', true);
         $cognome = get_user_meta($a['user_id'], 'last_name', true);
-        $sport=get_user_meta($a['user_id'], 'last_name', true);
+        $sport = get_user_meta($a['user_id'], 'last_name', true);
         $json[$a['user_id']]['nome'] = $nome . ' ' . $cognome;
     }
-    // $sql_presenti = "SELECT id_utente FROM webapp_lezioni WHERE ladata='{$opts['tim']}' AND palestra='{$opts['pal']}' AND disciplina='{$opts['spo']}'";
-    $sql_presenti = "SELECT id_utente FROM webapp_lezioni WHERE ladata='{$opts['tim']}' AND palestra='lm' AND disciplina='jk'";
-    $ipresenti = $wpdb->get_results($sql_presenti, ARRAY_A);
-    $json['sql'][]=$sql_id_allievi;
-    $json['sql'][]=$sql_presenti;
-    foreach ($ipresenti as $p) {
-        $json['presenze'][] = $p['id_utente'];
+    //vuol dire che sto chiamando la funzione tramite ajax
+    if (isset($opts)) {
+        // $sql_presenti = "SELECT id_utente FROM webapp_lezioni WHERE ladata='{$opts['tim']}' AND palestra='{$opts['pal']}' AND disciplina='{$opts['spo']}'";
+        $sql_presenti = "SELECT id_utente FROM webapp_lezioni WHERE ladata='{$opts['tim']}' AND palestra='lm' AND disciplina='jk'";
+        $ipresenti = $wpdb->get_results($sql_presenti, ARRAY_A);
+        $json['sql'][] = $sql_presenti;
+        $json['sql'][] = $sql_id_allievi;
+        foreach ($ipresenti as $p) {
+            $json['presenze'][] = $p['id_utente'];
+        }
     }
+    if ($ret) return json_encode($json);
+    echo json_encode($json);
+}
+/**
+ * Undocumented function
+ *
+ * @author Casalegno Marco <casalegno.marco@sigesgroup.it> 
+ * @return string
+ */
+function infoAllievo() {
+    global $wpdb, $opts;
+    if (!isset($opts['id'])) die(json_encode(['msg' => 'nessun allievo selezionato']));
+    $sql_allievo = "SELECT * FROM webapp_lezioni WHERE id_utente='{$opts['id']}' AND YEAR(ladata) = '{$opts['anno']}'";
+    $result = $wpdb->get_results($sql_allievo, ARRAY_A);
+    //setto le presenze cosi come vengono restituiti i dati
+    $json['presenze']=$result;
+    //estraggo il totale delle lezioni seguite
+    $json['lezioni']=count($result);
+    //raggru
+    //se non ho nessun risultato
+    if (count($result) == 0)
+        die(json_encode(['msg' => 'nessun risultato']));
     echo json_encode($json);
 }

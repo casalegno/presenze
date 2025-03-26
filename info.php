@@ -1,6 +1,5 @@
 <?php
-require_once 'api.php';
-
+//stampo le variabili JS con palestre e sports
 prepareJs();
 ?>
 <!--Riga per la selezione della data -->
@@ -34,7 +33,7 @@ prepareJs();
 
                     <!--Riga per la selezione delle sport -->
                     <div class="mb-5">
-                        <div class="form-check d-grid gap-2 d-block" id="Sport" role="group"
+                        <div class="form-check d-grid gap-2" id="Sport" role="group"
                             aria-label="Scegli lo sport">
                         </div>
                     </div>

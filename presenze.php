@@ -1,15 +1,20 @@
 <?php
-// Includi il file load.php per avere accesso alle funzionalità di WordPress
-require_once('load.php');
+//recupero il mese e l'anno attuali
+$mese=date('m');
+$anno=date('Y');
 ?>
 <!--Riga per la selezione della data -->
-<p>Seleziono l'utente e visualizzo tutte le lezioni a cui ha partecipato</p>
+<p>Seleziono l'utente xxe visualizzo tutte le lezioni a cui ha partecipato</p>
 <div class="mb-3">
-    <label for="dataPresenze" class="form-label">Seleziona Data</label>
-    <input type="date" class="form-control form-control-lg" id="dataPresenze" name="dataGiorno">
+    <label for="dataPresenze" class="form-label">Seleziona Mese e Anno</label>
+    <div class="d-flex">
+      <input type="number" min="01" max="12" value="<?= $mese ?>" id="mesePresenze" name="mesePresenze" class="form-control mx-2"/>
+      <input type="number" min="2010" max="2050" value="<?= $anno ?>" id="annoPresenze" name="annoPresenze" class="form-control mx-2"/>
+      <input type="date" class="form-control form-control-lg d-none" id="dataPresenze" name="dataGiorno">
+    </div>
 </div>
 
-<table class="table">
+<table class="table" id="tablePresenze">
   <thead>
     <tr>
       <th scope="col">Giorno</th>
